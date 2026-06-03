@@ -22,6 +22,19 @@ def write_json(filename, data):
         json.dump(data, f, indent=2)
 
 
+def is_owner(user_id) -> bool:
+    from config import OWNER_IDS
+    return int(user_id) in OWNER_IDS
+
+
+def is_superuser(user_id) -> bool:
+    """owner id or whitelisted with wl bot — full access to everything"""
+    if is_owner(user_id):
+        return True
+    wl = get_whitelist()
+    return str(user_id) in wl.get("bot", [])
+
+
 def get_guild(guild_id: str) -> dict:
     all_guilds = read_json("guilds.json")
     return all_guilds.get(guild_id, {})
@@ -83,6 +96,8 @@ def get_prefix(guild_id: str) -> str:
 
 
 def member_has_tag_manager_role(member, guild_id: str) -> bool:
+    if is_superuser(member.id):
+        return True
     s = get_guild(guild_id)
     roles = list(s.get("tag_manager_roles", []))
     if s.get("tag_manager_role"):
@@ -92,6 +107,8 @@ def member_has_tag_manager_role(member, guild_id: str) -> bool:
 
 
 def member_has_points_role(member, guild_id: str) -> bool:
+    if is_superuser(member.id):
+        return True
     s = get_guild(guild_id)
     role_id = s.get("points_role")
     if not role_id:
@@ -100,6 +117,8 @@ def member_has_points_role(member, guild_id: str) -> bool:
 
 
 def member_has_psr(member, guild_id: str) -> bool:
+    if is_superuser(member.id):
+        return True
     s = get_guild(guild_id)
     role_id = s.get("points_support_role")
     if not role_id:
@@ -108,6 +127,8 @@ def member_has_psr(member, guild_id: str) -> bool:
 
 
 def member_has_command_role(member, guild_id: str, cmd: str) -> bool:
+    if is_superuser(member.id):
+        return True
     s = get_guild(guild_id)
     command_roles = s.get("command_roles", {})
     allowed = command_roles.get(cmd, [])
@@ -117,11 +138,15 @@ def member_has_command_role(member, guild_id: str, cmd: str) -> bool:
 
 def has_full_access(interaction, cmd: str = "bot") -> bool:
     member = interaction.user
-    guild_id = str(interaction.guild_id) if interaction.guild_id else ""
-    if member.guild_permissions.administrator:
+    # owner always wins
+    if is_owner(member.id):
         return True
+    # wl bot always wins
     wl = get_whitelist()
     if str(member.id) in wl.get("bot", []):
+        return True
+    guild_id = str(interaction.guild_id) if interaction.guild_id else ""
+    if member.guild_permissions.administrator:
         return True
     if str(member.id) in wl.get(cmd, []):
         return True
