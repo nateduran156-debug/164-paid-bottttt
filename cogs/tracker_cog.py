@@ -10,14 +10,13 @@ from utils.tracker_storage import (
 )
 
 
-track_group = app_commands.Group(name="track", description="roblox player tracking")
-
-
 class TrackerCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @track_group.command(name="add", description="start tracking a roblox user")
+    track = app_commands.Group(name="track", description="roblox player tracking")
+
+    @track.command(name="add", description="start tracking a roblox user")
     @app_commands.describe(username="their roblox username")
     async def track_add(self, interaction: discord.Interaction, username: str):
         await interaction.response.defer(ephemeral=True)
@@ -48,7 +47,7 @@ class TrackerCog(commands.Cog):
         embed.set_footer(text="tracker")
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @track_group.command(name="remove", description="stop tracking a roblox user")
+    @track.command(name="remove", description="stop tracking a roblox user")
     @app_commands.describe(username="their roblox username")
     async def track_remove(self, interaction: discord.Interaction, username: str):
         removed = remove_track(str(interaction.user.id), username)
@@ -59,7 +58,7 @@ class TrackerCog(commands.Cog):
         embed.set_footer(text="tracker")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @track_group.command(name="list", description="see everyone you are currently tracking")
+    @track.command(name="list", description="see everyone you are currently tracking")
     async def track_list(self, interaction: discord.Interaction):
         tracks = get_tracks_for_user(str(interaction.user.id))
         if not tracks:
@@ -72,7 +71,7 @@ class TrackerCog(commands.Cog):
         embed.set_footer(text=f"tracker  {len(tracks)}/{MAX_TRACKS}")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @track_group.command(name="check", description="check what a tracked user is currently doing")
+    @track.command(name="check", description="check what a tracked user is currently doing")
     @app_commands.describe(username="their roblox username")
     async def track_check(self, interaction: discord.Interaction, username: str):
         tracks = get_tracks_for_user(str(interaction.user.id))
@@ -109,8 +108,8 @@ class TrackerCog(commands.Cog):
         embed.set_footer(text="tracker")
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @track_group.command(name="alert", description="only get notified when a tracked user joins a specific game")
-    @app_commands.describe(username="their roblox username", game="the game name filter — leave blank to get all alerts")
+    @track.command(name="alert", description="only get notified when a tracked user joins a specific game")
+    @app_commands.describe(username="their roblox username", game="game name filter — leave blank for all games")
     async def track_alert(self, interaction: discord.Interaction, username: str, game: str = None):
         tracks = get_tracks_for_user(str(interaction.user.id))
         match = next((t for t in tracks if t["roblox_username"].lower() == username.lower()), None)
@@ -128,7 +127,7 @@ class TrackerCog(commands.Cog):
         embed.set_footer(text="tracker")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @track_group.command(name="notify", description="set where tracker alerts go — leave blank for dms")
+    @track.command(name="notify", description="set where tracker alerts go — leave blank for dms")
     @app_commands.describe(channel="the channel to send alerts to")
     async def track_notify(self, interaction: discord.Interaction, channel: discord.TextChannel = None):
         if channel:
@@ -141,7 +140,7 @@ class TrackerCog(commands.Cog):
         embed.set_footer(text="tracker")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @track_group.command(name="settings", description="see your current tracker settings")
+    @track.command(name="settings", description="see your current tracker settings")
     async def track_settings(self, interaction: discord.Interaction):
         user_id = str(interaction.user.id)
         dm_on = get_dm_on_join(user_id)
@@ -158,6 +157,4 @@ class TrackerCog(commands.Cog):
 
 
 async def setup(bot):
-    cog = TrackerCog(bot)
-    bot.tree.add_command(track_group)
-    await bot.add_cog(cog)
+    await bot.add_cog(TrackerCog(bot))

@@ -2,8 +2,12 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from config import PURPLE
-from utils.storage import get_guild, set_guild
-from utils.roblox import get_user_by_username, get_user_groups, get_group_info
+from utils.storage import get_guild, set_guild, is_superuser
+from utils.roblox import get_user_by_username, get_user_groups
+
+
+def admin_or_super(interaction: discord.Interaction) -> bool:
+    return is_superuser(interaction.user.id) or interaction.user.guild_permissions.administrator
 
 
 class GroupsCog(commands.Cog):
@@ -15,23 +19,16 @@ class GroupsCog(commands.Cog):
     async def gc(self, interaction: discord.Interaction, username: str):
         await interaction.response.defer()
         guild_id = str(interaction.guild_id) if interaction.guild_id else ""
-
         user = await get_user_by_username(username)
         if not user:
-            embed = discord.Embed(
-                description=f"could not find **{username}** on roblox",
-                color=PURPLE,
-            )
+            embed = discord.Embed(description=f"could not find **{username}** on roblox", color=PURPLE)
             await interaction.followup.send(embed=embed)
             return
-
         groups = await get_user_groups(user["id"])
         s = get_guild(guild_id) if guild_id else {}
         flagged_groups = set(s.get("flagged_groups", []))
-
         group_lines = []
         flagged_hits = []
-
         for entry in groups:
             g = entry.get("group", {})
             role = entry.get("role", {})
@@ -43,14 +40,11 @@ class GroupsCog(commands.Cog):
             group_lines.append(f"`{gid}`  {gname}  —  {rname}{flag_label}")
             if is_flagged:
                 flagged_hits.append(gname)
-
         if not group_lines:
             group_lines = ["not in any groups"]
-
         description = f"**{user['name']}** — id `{user['id']}`\ngroups: **{len(groups)}**"
         if flagged_hits:
             description += f"\nflagged: {', '.join(flagged_hits)}"
-
         chunks = []
         current = ""
         for line in group_lines:
@@ -61,7 +55,6 @@ class GroupsCog(commands.Cog):
                 current = (current + "\n" + line) if current else line
         if current:
             chunks.append(current)
-
         embed = discord.Embed(
             title=f"group check  —  {user['name']}",
             description=description + "\n\n" + (chunks[0] if chunks else ""),
@@ -69,7 +62,6 @@ class GroupsCog(commands.Cog):
         )
         embed.set_footer(text=f"user id: {user['id']}")
         await interaction.followup.send(embed=embed)
-
         for chunk in chunks[1:]:
             extra = discord.Embed(description=chunk, color=PURPLE)
             await interaction.channel.send(embed=extra)
@@ -77,20 +69,17 @@ class GroupsCog(commands.Cog):
     @app_commands.command(name="gid", description="set the main roblox group id for this server")
     @app_commands.describe(groupid="the roblox group id")
     async def gid(self, interaction: discord.Interaction, groupid: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         set_guild(str(interaction.guild_id), {"group_id": groupid})
-        embed = discord.Embed(
-            description=f"main group id set to `{groupid}`",
-            color=PURPLE,
-        )
+        embed = discord.Embed(description=f"main group id set to `{groupid}`", color=PURPLE)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="flag", description="flag a roblox group — shows a warning when members are in it")
     @app_commands.describe(groupid="the roblox group id to flag")
     async def flag(self, interaction: discord.Interaction, groupid: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         guild_id = str(interaction.guild_id)
@@ -101,16 +90,13 @@ class GroupsCog(commands.Cog):
             return
         flagged.append(groupid)
         set_guild(guild_id, {"flagged_groups": flagged})
-        embed = discord.Embed(
-            description=f"group `{groupid}` is now flagged",
-            color=PURPLE,
-        )
+        embed = discord.Embed(description=f"group `{groupid}` is now flagged", color=PURPLE)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="unflag", description="remove a group from the flagged list")
     @app_commands.describe(groupid="the group id to unflag")
     async def unflag(self, interaction: discord.Interaction, groupid: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         guild_id = str(interaction.guild_id)
@@ -121,10 +107,7 @@ class GroupsCog(commands.Cog):
             return
         flagged.remove(groupid)
         set_guild(guild_id, {"flagged_groups": flagged})
-        embed = discord.Embed(
-            description=f"group `{groupid}` removed from the flagged list",
-            color=PURPLE,
-        )
+        embed = discord.Embed(description=f"group `{groupid}` removed from the flagged list", color=PURPLE)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="flist", description="list all flagged groups for this server")
@@ -137,10 +120,7 @@ class GroupsCog(commands.Cog):
             await interaction.response.send_message(embed=embed)
             return
         lines = [f"`{i+1}.`  `{gid}`" for i, gid in enumerate(flagged)]
-        embed = discord.Embed(
-            description="\n".join(lines),
-            color=PURPLE,
-        )
+        embed = discord.Embed(description="\n".join(lines), color=PURPLE)
         embed.set_footer(text=f"flagged groups  {len(flagged)}")
         await interaction.response.send_message(embed=embed)
 

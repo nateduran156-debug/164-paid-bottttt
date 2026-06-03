@@ -2,7 +2,10 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from config import PURPLE, ALL_TAGS
-from utils.storage import get_guild, set_guild, member_has_tag_manager_role, has_full_access, get_whitelist, get_roblox_cookie
+from utils.storage import (
+    get_guild, set_guild, member_has_tag_manager_role,
+    has_full_access, get_whitelist, get_roblox_cookie, is_superuser,
+)
 from utils.roblox import give_roblox_tag
 
 
@@ -14,7 +17,8 @@ class TagSelectMenu(discord.ui.Select):
         super().__init__(placeholder="pick a tag to assign", options=options, min_values=1, max_values=1)
 
     async def callback(self, interaction: discord.Interaction):
-        if interaction.user.id != self.requester_id:
+        # owner and wl-bot users can use any menu — everyone else must be the one who opened it
+        if not is_superuser(interaction.user.id) and interaction.user.id != self.requester_id:
             await interaction.response.send_message("this is not your menu", ephemeral=True)
             return
 
@@ -54,16 +58,16 @@ class TagsCog(commands.Cog):
             return False
         member = interaction.user
         guild_id = str(interaction.guild_id)
-        if member.guild_permissions.administrator:
+        # owner and wl-bot users always pass
+        if is_superuser(member.id):
             return True
-        wl = get_whitelist()
-        if str(member.id) in wl.get("bot", []):
+        if member.guild_permissions.administrator:
             return True
         if member_has_tag_manager_role(member, guild_id):
             return True
         return False
 
-    @app_commands.command(name="role", description="assign a roblox tag to a user")
+    @app_commands.command(name="role", description="assign a roblox tag to a user — picks from a dropdown")
     @app_commands.describe(roblox="roblox username of the person getting the tag")
     async def role_command(self, interaction: discord.Interaction, roblox: str):
         if not self.can_use_role(interaction):
@@ -71,7 +75,9 @@ class TagsCog(commands.Cog):
             return
 
         if not get_roblox_cookie():
-            await interaction.response.send_message("no roblox cookie is set — use /cookie to set one first", ephemeral=True)
+            await interaction.response.send_message(
+                "no roblox cookie is set — use /cookie to set one first", ephemeral=True
+            )
             return
 
         embed = discord.Embed(
@@ -85,7 +91,7 @@ class TagsCog(commands.Cog):
     @app_commands.command(name="cookie", description="set the roblox bot cookie used for ranking")
     @app_commands.describe(cookie="your .ROBLOSECURITY cookie value")
     async def cookie_command(self, interaction: discord.Interaction, cookie: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not is_superuser(interaction.user.id) and not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("only admins can set the cookie", ephemeral=True)
             return
         from utils.storage import set_roblox_cookie
@@ -95,7 +101,7 @@ class TagsCog(commands.Cog):
     @app_commands.command(name="tmr", description="set the tag manager role — they can use /role")
     @app_commands.describe(role="the role to set as tag manager")
     async def tmr_command(self, interaction: discord.Interaction, role: discord.Role):
-        if not interaction.user.guild_permissions.administrator:
+        if not is_superuser(interaction.user.id) and not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("only admins can set that", ephemeral=True)
             return
         guild_id = str(interaction.guild_id)
@@ -109,7 +115,7 @@ class TagsCog(commands.Cog):
     @app_commands.command(name="wlrole", description="give a role access to a specific command or all tag commands")
     @app_commands.describe(role="the role to whitelist", command="command name — leave blank for tag manager access")
     async def wlrole_command(self, interaction: discord.Interaction, role: discord.Role, command: str = None):
-        if not interaction.user.guild_permissions.administrator:
+        if not is_superuser(interaction.user.id) and not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("only admins can use that", ephemeral=True)
             return
         guild_id = str(interaction.guild_id)
@@ -121,10 +127,7 @@ class TagsCog(commands.Cog):
                 return
             roles.append(str(role.id))
             set_guild(guild_id, {"tag_manager_roles": roles})
-            embed = discord.Embed(
-                description=f"{role.mention} can now use /role",
-                color=PURPLE,
-            )
+            embed = discord.Embed(description=f"{role.mention} can now use /role", color=PURPLE)
         else:
             command_roles = dict(s.get("command_roles", {}))
             command_roles.setdefault(command, [])
@@ -133,10 +136,7 @@ class TagsCog(commands.Cog):
                 return
             command_roles[command].append(str(role.id))
             set_guild(guild_id, {"command_roles": command_roles})
-            embed = discord.Embed(
-                description=f"{role.mention} can now use /{command}",
-                color=PURPLE,
-            )
+            embed = discord.Embed(description=f"{role.mention} can now use /{command}", color=PURPLE)
         await interaction.response.send_message(embed=embed)
 
 

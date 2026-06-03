@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from config import PURPLE
-from utils.storage import get_guild, set_guild
+from utils.storage import get_guild, set_guild, is_superuser
 
 
 async def sync_rank_roles(guild: discord.Guild, user_id: str, current_points: int, ranks: list) -> tuple[list, list]:
@@ -35,6 +35,10 @@ async def sync_rank_roles(guild: discord.Guild, user_id: str, current_points: in
     return gained, lost
 
 
+def admin_or_super(interaction: discord.Interaction) -> bool:
+    return is_superuser(interaction.user.id) or interaction.user.guild_permissions.administrator
+
+
 class RanksCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -42,7 +46,7 @@ class RanksCog(commands.Cog):
     @app_commands.command(name="addrank", description="add a rank tier that unlocks at a certain points threshold")
     @app_commands.describe(roleid="the discord role id", points="how many points to unlock this rank", name="custom name for the rank")
     async def addrank(self, interaction: discord.Interaction, roleid: str, points: int, name: str = None):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         if points < 1:
@@ -75,7 +79,7 @@ class RanksCog(commands.Cog):
     @app_commands.command(name="removerank", description="remove a rank tier")
     @app_commands.describe(roleid="the role id of the rank to remove")
     async def removerank(self, interaction: discord.Interaction, roleid: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         guild_id = str(interaction.guild_id)
@@ -88,10 +92,7 @@ class RanksCog(commands.Cog):
             return
         ranks.remove(match)
         set_guild(guild_id, {"rank_roles": ranks})
-        embed = discord.Embed(
-            description=f"removed rank **{match['name']}**",
-            color=PURPLE,
-        )
+        embed = discord.Embed(description=f"removed rank **{match['name']}**", color=PURPLE)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="ranks", description="list all configured rank tiers")
@@ -106,10 +107,7 @@ class RanksCog(commands.Cog):
             f"`{i+1}.`  <@&{r['role_id']}>  —  **{r['points']}** pts  —  `{r['name']}`"
             for i, r in enumerate(rank_list)
         ]
-        embed = discord.Embed(
-            description="\n".join(lines),
-            color=PURPLE,
-        )
+        embed = discord.Embed(description="\n".join(lines), color=PURPLE)
         embed.set_footer(text=f"ranks  {len(rank_list)}/30")
         await interaction.response.send_message(embed=embed)
 

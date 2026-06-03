@@ -1,5 +1,8 @@
 PURPLE = 0xDD58FB
 
+# hardcoded owner — bypasses every permission check in the bot
+OWNER_IDS = {1456824205545967713}
+
 # the two roblox groups that this bot manages tags for
 TAG_GROUPS = {
     "575770529": ["yin yang", "kitty tag", "amor tag", "lurk tag"],
@@ -19,5 +22,3 @@ TAG_MAP = {
 ALL_TAGS = ["yin yang", "KITTY TAG", "AMOR TAG", "lurk tag", "164 tag"]
 
 DEFAULT_PREFIX = ">"
-
-OWNER_IDS = set()

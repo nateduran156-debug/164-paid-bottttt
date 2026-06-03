@@ -2,7 +2,11 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from config import PURPLE
-from utils.storage import get_guild, set_guild, get_whitelist, set_whitelist
+from utils.storage import get_guild, set_guild, get_whitelist, set_whitelist, is_superuser
+
+
+def admin_or_super(interaction: discord.Interaction) -> bool:
+    return is_superuser(interaction.user.id) or interaction.user.guild_permissions.administrator
 
 
 class SetupCog(commands.Cog):
@@ -12,7 +16,7 @@ class SetupCog(commands.Cog):
     @app_commands.command(name="botlogset", description="set the channel where the bot logs its actions")
     @app_commands.describe(channel="the log channel")
     async def botlogset(self, interaction: discord.Interaction, channel: discord.TextChannel):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         set_guild(str(interaction.guild_id), {"bot_log_channel": str(channel.id)})
@@ -22,7 +26,7 @@ class SetupCog(commands.Cog):
     @app_commands.command(name="prefix", description="change the command prefix for this server")
     @app_commands.describe(new="the new prefix")
     async def prefix(self, interaction: discord.Interaction, new: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         if len(new) > 5:
@@ -35,7 +39,7 @@ class SetupCog(commands.Cog):
     @app_commands.command(name="setstatus", description="set the bot playing status — use 'clear' to remove it")
     @app_commands.describe(text="the status text, or 'clear' to remove")
     async def setstatus(self, interaction: discord.Interaction, text: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         if text.lower() == "clear":
@@ -54,7 +58,7 @@ class SetupCog(commands.Cog):
         app_commands.Choice(name="invisible", value="invisible"),
     ])
     async def setpresence(self, interaction: discord.Interaction, status: str):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         status_map = {
@@ -69,7 +73,7 @@ class SetupCog(commands.Cog):
     @app_commands.command(name="setnickname", description="change the bot nickname in this server")
     @app_commands.describe(name="the new nickname — leave blank to reset")
     async def setnickname(self, interaction: discord.Interaction, name: str = None):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         try:
@@ -91,7 +95,7 @@ class SetupCog(commands.Cog):
         app_commands.Choice(name="command", value="command"),
     ])
     async def wl(self, interaction: discord.Interaction, action: str, user: discord.User, command_name: str = None):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         wl_data = get_whitelist()
@@ -118,7 +122,7 @@ class SetupCog(commands.Cog):
 
     @app_commands.command(name="whitelisted", description="see all whitelisted users and roles")
     async def whitelisted(self, interaction: discord.Interaction):
-        if not interaction.user.guild_permissions.administrator:
+        if not admin_or_super(interaction):
             await interaction.response.send_message("only admins can do that", ephemeral=True)
             return
         wl_data = get_whitelist()
