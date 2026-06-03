@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from config import PURPLE
 from utils.storage import get_guild, set_guild, is_superuser
-from utils.roblox import get_user_by_username, get_user_groups
+from utils.roblox import get_user_by_username, get_user_groups, get_user_avatar_url
 
 
 def admin_or_super(interaction: discord.Interaction) -> bool:
@@ -19,52 +19,84 @@ class GroupsCog(commands.Cog):
     async def gc(self, interaction: discord.Interaction, username: str):
         await interaction.response.defer()
         guild_id = str(interaction.guild_id) if interaction.guild_id else ""
+
         user = await get_user_by_username(username)
         if not user:
-            embed = discord.Embed(description=f"could not find **{username}** on roblox", color=PURPLE)
+            embed = discord.Embed(
+                description=f"no roblox account found for **{username}**",
+                color=PURPLE,
+            )
             await interaction.followup.send(embed=embed)
             return
+
         groups = await get_user_groups(user["id"])
         s = get_guild(guild_id) if guild_id else {}
         flagged_groups = set(s.get("flagged_groups", []))
-        group_lines = []
-        flagged_hits = []
+        avatar_url = await get_user_avatar_url(user["id"])
+
+        normal_lines = []
+        flagged_lines = []
+
         for entry in groups:
             g = entry.get("group", {})
             role = entry.get("role", {})
             gid = str(g.get("id", ""))
-            gname = g.get("name", "unknown group")
+            gname = g.get("name", "unknown")
             rname = role.get("name", "")
-            is_flagged = gid in flagged_groups
-            flag_label = "  [FLAGGED]" if is_flagged else ""
-            group_lines.append(f"`{gid}`  {gname}  —  {rname}{flag_label}")
-            if is_flagged:
-                flagged_hits.append(gname)
-        if not group_lines:
-            group_lines = ["not in any groups"]
-        description = f"**{user['name']}** — id `{user['id']}`\ngroups: **{len(groups)}**"
-        if flagged_hits:
-            description += f"\nflagged: {', '.join(flagged_hits)}"
-        chunks = []
-        current = ""
-        for line in group_lines:
-            if len(current) + len(line) + 1 > 3800:
-                chunks.append(current)
-                current = line
+            if gid in flagged_groups:
+                flagged_lines.append(f"`{gid}`  {gname}  —  {rname}")
             else:
-                current = (current + "\n" + line) if current else line
-        if current:
-            chunks.append(current)
-        embed = discord.Embed(
-            title=f"group check  —  {user['name']}",
-            description=description + "\n\n" + (chunks[0] if chunks else ""),
-            color=PURPLE,
+                normal_lines.append(f"`{gid}`  {gname}  —  {rname}")
+
+        embed = discord.Embed(color=PURPLE)
+
+        if avatar_url:
+            embed.set_author(
+                name=user["name"],
+                icon_url=avatar_url,
+                url=f"https://www.roblox.com/users/{user['id']}/profile",
+            )
+            embed.set_thumbnail(url=avatar_url)
+        else:
+            embed.set_author(
+                name=user["name"],
+                url=f"https://www.roblox.com/users/{user['id']}/profile",
+            )
+
+        embed.add_field(
+            name="user id",
+            value=f"`{user['id']}`",
+            inline=True,
         )
-        embed.set_footer(text=f"user id: {user['id']}")
+        embed.add_field(
+            name="groups",
+            value=str(len(groups)) if groups else "0",
+            inline=True,
+        )
+        embed.add_field(
+            name="flagged",
+            value=str(len(flagged_lines)) if flagged_lines else "none",
+            inline=True,
+        )
+
+        if flagged_lines:
+            chunk = "\n".join(flagged_lines[:10])
+            if len(flagged_lines) > 10:
+                chunk += f"\n... and {len(flagged_lines) - 10} more"
+            embed.add_field(name="flagged groups", value=chunk, inline=False)
+
+        if normal_lines:
+            # split into chunks of 20 to avoid hitting 1024 char field limit
+            chunk_size = 20
+            for i in range(0, min(len(normal_lines), 40), chunk_size):
+                chunk = "\n".join(normal_lines[i:i + chunk_size])
+                label = "groups" if i == 0 else "groups (cont.)"
+                embed.add_field(name=label, value=chunk, inline=False)
+        elif not groups:
+            embed.add_field(name="groups", value="not in any groups", inline=False)
+
+        embed.set_footer(text="group check")
         await interaction.followup.send(embed=embed)
-        for chunk in chunks[1:]:
-            extra = discord.Embed(description=chunk, color=PURPLE)
-            await interaction.channel.send(embed=extra)
 
     @app_commands.command(name="gid", description="set the main roblox group id for this server")
     @app_commands.describe(groupid="the roblox group id")

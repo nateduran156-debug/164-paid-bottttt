@@ -7,110 +7,94 @@ CATEGORIES = {
     "ranks": {
         "label": "Ranks",
         "commands": [
-            ("/addrank <roleid> <points> [name]", "add a rank tier — members get the role when they hit that points threshold"),
-            ("/removerank <roleid>", "remove a rank tier"),
-            ("/ranks", "list all rank tiers sorted by points needed"),
+            ("/addrank <roleid> <points> [name]", "sets a rank role that gets given out when someone hits a point amount"),
+            ("/removerank <roleid>", "removes a rank from the list"),
+            ("/ranks", "shows all the rank tiers and their point requirements"),
         ],
     },
     "tags": {
         "label": "Tags",
         "commands": [
-            ("/role <roblox>", "gives a roblox user a tag — shows a dropdown to pick which one"),
-            ("/tmr @role", "set the role that can use the /role command"),
-            ("/wlrole @role [command]", "let a role use a specific command, or all tag commands if left blank"),
-            ("/cookie <value>", "set the roblox bot cookie used for ranking (owner only)"),
+            ("/role <roblox>", "pull up the tag dropdown for a roblox user — pick one and it gets assigned"),
+            ("/tmr @role", "sets which role can use /role"),
+            ("/wlrole @role [command]", "lets a role use a specific command, or all tag stuff if you leave it blank"),
+            ("/cookie <value>", "sets the roblox cookie the bot uses to rank people — admin only"),
         ],
     },
     "groups": {
         "label": "Groups",
         "commands": [
-            ("/gc <username>", "check all roblox groups a user is in, with flagged group warnings"),
-            ("/gid <groupid>", "set the main roblox group id for this server"),
-            ("/flag <groupid>", "flag a roblox group — shows a warning when members are in it"),
-            ("/unflag <groupid>", "remove a group from the flagged list"),
-            ("/flist", "list all flagged groups for this server"),
+            ("/gc <username>", "pulls up all the groups a roblox user is in and flags any opp groups"),
+            ("/gid <groupid>", "sets the main roblox group for the server"),
+            ("/flag <groupid>", "flags a group so it shows up as suspicious in gc"),
+            ("/unflag <groupid>", "removes a group from the flagged list"),
+            ("/flist", "shows all the groups you have flagged"),
         ],
     },
     "points": {
         "label": "Points",
         "commands": [
-            ("/register <username>", "link your discord to your roblox username"),
-            ("/rankup @user [amount]", "give a member raid points"),
-            ("/removepoints @user [amount]", "take raid points from a member"),
-            ("/check [@user]", "check point total — yours or someone else's"),
-            ("/leaderboard", "see the top 15 point holders"),
-            ("/resetall", "wipe all points (asks for confirmation)"),
-            ("/wlp @role", "give a role full access to all point commands"),
-            ("/psr @role", "set the points support role — they can use check and leaderboard"),
+            ("/register <username>", "links your discord to your roblox account"),
+            ("/rankup @user [amount]", "gives someone raid points — defaults to 1 if you don't specify"),
+            ("/removepoints @user [amount]", "takes points from someone"),
+            ("/check [@user]", "checks your points or someone else's"),
+            ("/leaderboard", "shows the top 15 in the server"),
+            ("/resetall", "wipes everyone's points — it'll ask you to confirm first"),
+            ("/wlp @role", "gives a role access to point commands"),
+            ("/psr @role", "sets a support role that can view points and the leaderboard"),
         ],
     },
     "tracker": {
         "label": "Tracker",
         "commands": [
-            ("/track add <username>", "start tracking a roblox user — get pinged when they join a game"),
-            ("/track remove <username>", "stop tracking a user"),
-            ("/track list", "see everyone you are tracking"),
-            ("/track check <username>", "check what game a tracked user is in right now"),
-            ("/track alert <username> [game]", "only get notified for a specific game"),
-            ("/track notify [#channel]", "set where alerts go — leave blank to switch back to dms"),
-            ("/track settings", "see your current tracker settings"),
+            ("/track add <username>", "starts tracking a roblox user — you get pinged when they hop in a game"),
+            ("/track remove <username>", "stops tracking someone"),
+            ("/track list", "shows who you're tracking"),
+            ("/track check <username>", "checks what game a tracked user is in right now"),
+            ("/track alert <username> [game]", "only get pinged for a specific game — leave blank to reset"),
+            ("/track notify [#channel]", "set where your alerts go — leave blank to go back to dms"),
+            ("/track settings", "shows your tracker setup"),
         ],
     },
     "vanity": {
         "label": "Vanity",
         "commands": [
-            ("/vanity toggle", "turn the vanity watcher on or off"),
-            ("/vanity setlog #channel", "set the channel where vanity detections are posted"),
-            ("/vanity flag <vanity>", "mark a vanity as an opp vanity"),
-            ("/vanity unflagvanity <vanity>", "remove a vanity from the opp list"),
-            ("/vanity whitelist <vanity>", "whitelist a vanity so it does not trigger alerts"),
-            ("/vanity unwhitelist <vanity>", "remove a vanity from the whitelist"),
-            ("/vanity opplist", "list all opp vanities"),
-            ("/vanity flagged", "list all members currently repping an opp vanity"),
-            ("/vanity unflag @user", "manually remove a vanity flag from a member"),
-            ("/vanity scan", "scan all members right now"),
-            ("/vanity pingrole @role", "set what role gets pinged on detection"),
+            ("/vanity toggle", "turns the vanity watcher on or off"),
+            ("/vanity setlog #channel", "sets where vanity alerts get sent"),
+            ("/vanity flag <vanity>", "adds a vanity to the opp list"),
+            ("/vanity unflagvanity <vanity>", "removes a vanity from the opp list"),
+            ("/vanity whitelist <vanity>", "whitelists a vanity so it never triggers"),
+            ("/vanity unwhitelist <vanity>", "removes something from the whitelist"),
+            ("/vanity mute <vanity>", "still flags it but won't ping"),
+            ("/vanity unmute <vanity>", "turns pinging back on for that vanity"),
+            ("/vanity opplist", "lists all opp vanities"),
+            ("/vanity flagged", "shows everyone currently repping an opp vanity"),
+            ("/vanity unflag @user", "clears the flag from a specific member"),
+            ("/vanity scan", "scans everyone in the server right now"),
+            ("/vanity pingrole @role", "sets the role that gets pinged on a detection"),
         ],
     },
     "setup": {
         "label": "Setup",
         "commands": [
-            ("/botlogset #channel", "set where the bot logs its actions"),
-            ("/gid <groupid>", "set the main roblox group id"),
-            ("/wl bot @user", "give a user full access to all commands"),
-            ("/wl command <name> @user", "give a user access to one specific command"),
-            ("/whitelisted", "see all whitelisted users and roles"),
-            ("/setstatus <text>", "set the bot playing status"),
-            ("/setpresence <status>", "set presence to online, idle, dnd, or invisible"),
-            ("/setnickname [name]", "change the bot nickname in this server"),
-            ("/prefix <new>", "change the command prefix for this server"),
+            ("/botlogset #channel", "sets where the bot logs everything"),
+            ("/gid <groupid>", "sets the main roblox group id"),
+            ("/wl bot @user", "gives someone full bot access — bypasses all permission checks"),
+            ("/wl command <name> @user", "gives someone access to one specific command"),
+            ("/whitelisted", "shows everyone on the whitelist"),
+            ("/setstatus <text>", "sets the bot status — type clear to remove it"),
+            ("/setpresence <status>", "sets the presence to online, idle, dnd, or invisible"),
+            ("/setnickname [name]", "changes the bot nickname — leave blank to reset it"),
+            ("/prefix <new>", "changes the prefix for this server"),
         ],
     },
 }
 
-
-class HelpSelectMenu(discord.ui.Select):
-    def __init__(self):
-        options = [
-            discord.SelectOption(label=cat["label"], value=key)
-            for key, cat in CATEGORIES.items()
-        ]
-        super().__init__(placeholder="pick a category", options=options, min_values=1, max_values=1)
-
-    async def callback(self, interaction: discord.Interaction):
-        key = self.values[0]
-        embed = build_help_embed(key)
-        await interaction.response.edit_message(embed=embed, view=self.view)
-
-
-class HelpView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=120)
-        self.add_item(HelpSelectMenu())
+CATEGORY_ORDER = ["ranks", "tags", "groups", "points", "tracker", "vanity", "setup"]
 
 
 def build_help_embed(category_key: str) -> discord.Embed:
-    cat = CATEGORIES.get(category_key, list(CATEGORIES.values())[0])
+    cat = CATEGORIES.get(category_key, CATEGORIES["ranks"])
     lines = []
     for cmd, desc in cat["commands"]:
         lines.append(f"`{cmd}`\n{desc}")
@@ -119,18 +103,48 @@ def build_help_embed(category_key: str) -> discord.Embed:
         description="\n\n".join(lines),
         color=PURPLE,
     )
-    embed.set_footer(text="/164")
+    embed.set_footer(text="select a category below to browse")
     return embed
+
+
+class HelpSelect(discord.ui.Select):
+    def __init__(self, current_key: str):
+        options = [
+            discord.SelectOption(
+                label=CATEGORIES[k]["label"],
+                value=k,
+                default=(k == current_key),
+            )
+            for k in CATEGORY_ORDER
+        ]
+        super().__init__(
+            placeholder=CATEGORIES[current_key]["label"],
+            options=options,
+            min_values=1,
+            max_values=1,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        key = self.values[0]
+        embed = build_help_embed(key)
+        view = HelpView(key)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class HelpView(discord.ui.View):
+    def __init__(self, current_key: str = "ranks"):
+        super().__init__(timeout=180)
+        self.add_item(HelpSelect(current_key))
 
 
 class HelpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="164", description="shows all bot commands")
+    @app_commands.command(name="164", description="browse all bot commands")
     async def help_command(self, interaction: discord.Interaction):
         embed = build_help_embed("ranks")
-        view = HelpView()
+        view = HelpView("ranks")
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 
