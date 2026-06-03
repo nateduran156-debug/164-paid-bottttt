@@ -151,23 +151,12 @@ class PrefixCog(commands.Cog):
         await ctx.reply(embed=embed)
 
     @commands.command(name="help")
-    async def help_prefix(self, ctx):
-        prefix = get_prefix(str(ctx.guild.id))
-        embed = discord.Embed(
-            title="164 bot",
-            description=(
-                f"use `{prefix}lb` for leaderboard\n"
-                f"use `{prefix}check @user` to check points\n"
-                f"use `{prefix}rankup @user [amount]` to add points\n"
-                f"use `{prefix}remove @user [amount]` to take points\n"
-                f"use `{prefix}gc <username>` for a group check\n"
-                f"use `{prefix}ranks` to see rank tiers\n\n"
-                "for all slash commands use `/164`"
-            ),
-            color=PURPLE,
-        )
-        embed.set_footer(text=f"prefix: {prefix}")
-        await ctx.reply(embed=embed)
+      async def help_prefix(self, ctx):
+          from cogs.help_cog import build_help_embed, HelpView
+          prefix = get_prefix(str(ctx.guild.id))
+          embed = build_help_embed("ranks", prefix)
+          view = HelpView("ranks", prefix)
+          await ctx.reply(embed=embed, view=view)
 
 
 async def setup(bot):
