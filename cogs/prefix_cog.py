@@ -151,13 +151,12 @@ class PrefixCog(commands.Cog):
         await ctx.reply(embed=embed)
 
     @commands.command(name="help")
-      async def help_prefix(self, ctx):
-          from cogs.help_cog import build_help_embed, HelpView
-          prefix = get_prefix(str(ctx.guild.id))
-          embed = build_help_embed("ranks", prefix)
-          view = HelpView("ranks", prefix)
-          await ctx.reply(embed=embed, view=view)
-
+    async def help_prefix(self, ctx):
+        from utils.help_data import build_help_embed, HelpView
+        prefix = get_prefix(str(ctx.guild.id))
+        embed = build_help_embed("ranks", prefix)
+        view = HelpView("ranks", prefix)
+        await ctx.reply(embed=embed, view=view)
 
 async def setup(bot):
     await bot.add_cog(PrefixCog(bot))
